@@ -1,9 +1,157 @@
-import {ArrowRight,ChevronDown, CirclePlus, Github, Link2, ShieldCheck, Sparkles} from 'lucide-react';
-import {useState} from 'react';
-import {agents,allAgentIds} from '../data/mock';
-import type {AgentId} from '../types';
-interface Props{onStart:(repository:string,enabled:AgentId[],context:string)=>void}
-export default function Setup({onStart}:Props){const [enabled,setEnabled]=useState<AgentId[]>(allAgentIds);const [repo,setRepo]=useState('https://github.com/acme/payment-service');const [context,setContext]=useState('');const [error,setError]=useState('');const [open,setOpen]=useState(false);
-const toggle=(id:AgentId)=>setEnabled(a=>a.includes(id)?a.filter(x=>x!==id):[...a,id]);function submit(){if(!repo.trim()||!repo.includes('github.com/')||!repo.split('github.com/')[1]?.includes('/')){setError('Enter a GitHub repository URL, such as https://github.com/acme/payment-service');return;}if(enabled.length===0){setError('Select at least one agent.');return;}setError('');onStart(repo.replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'').trim(),enabled,context);}
-return <div className="setup-page"><span className="large-brand"><ShieldCheck size={22}/></span><h1>What are we securing today?</h1><p className="intro">Give our AI agents a repository. Get a clear picture of its vulnerabilities, with verified findings and<br className="desktop-only"/> actionable fixes.</p><div className="setup-form"><div className="eyebrow">AI model configuration</div><p className="helper">Choose the model for each agent independently. These selections apply only to this analysis run.</p><div className="agent-selectors">{agents.map(a=><button className={`agent-select ${enabled.includes(a.id)?'agent-selected':'agent-disabled'}`} key={a.id} onClick={()=>toggle(a.id)}><span className="agent-mark">{enabled.includes(a.id)?<ShieldCheck size={16}/>:<CirclePlus size={16}/>}</span><span className="agent-main"><strong>{a.name}</strong><span>{a.description}</span><small>Models: Gemini · Claude · GPT-4 · Llama</small></span><span className="agent-pill"><span>{a.model}</span><span>{enabled.includes(a.id)?'Selected':'Off'}</span><ChevronDown size={13}/></span></button>)}</div><button className="add-agent" onClick={()=>setOpen(!open)} aria-label="Add agent"><CirclePlus size={20}/></button>{open&&<div className="extra-note"><Sparkles size={14}/>All four agents are available in this demo. Click an agent to enable or disable it.</div>}
-<div className="field-label"><Github size={14}/> GitHub repository</div><div className="repository-input"><Github size={16}/><input aria-label="GitHub repository" value={repo} onChange={e=>setRepo(e.target.value)} placeholder="https://github.com/organization/repository"/><Link2 size={14}/></div><div className="field-label">Extra context <span className="muted">Optional</span></div><div className="textarea-wrap"><textarea value={context} onChange={e=>setContext(e.target.value.slice(0,5000))} placeholder="What should the agents know? Share areas to focus on, your tech stack, or any specific security concerns..."/><span>{context.length} / 5,000</span></div>{error&&<div role="alert" className="error-message">{error}</div>}<div className="setup-actions"><div className="tiny-policy"><Sparkles size={13}/>Default branch · Full security review</div><button className="primary-btn" onClick={submit}>Start analysis <ArrowRight size={15}/></button></div></div><div className="setup-footer">♧ Multi-agent code review &nbsp;&nbsp;&nbsp; ♧ Verified vulnerabilities &nbsp;&nbsp;&nbsp; ♧ Actionable report</div><div className="ai-disclaimer">AI can make mistakes. Review findings before making changes.</div></div>}
+import {
+  ArrowRight,
+  ChevronDown,
+  CirclePlus,
+  Github,
+  Link2,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { useState } from "react";
+import { agents, allAgentIds } from "../data/mock";
+import type { AgentId } from "../types";
+interface Props {
+  onStart: (repository: string, enabled: AgentId[], context: string) => void;
+}
+export default function Setup({ onStart }: Props) {
+  const [enabled, setEnabled] = useState<AgentId[]>(allAgentIds);
+  const [repo, setRepo] = useState("https://github.com/acme/payment-service");
+  const [context, setContext] = useState("");
+  const [error, setError] = useState("");
+  const [open, setOpen] = useState(false);
+  const toggle = (id: AgentId) =>
+    setEnabled((a) =>
+      a.includes(id) ? a.filter((x) => x !== id) : [...a, id],
+    );
+  function submit() {
+    if (
+      !repo.trim() ||
+      !repo.includes("github.com/") ||
+      !repo.split("github.com/")[1]?.includes("/")
+    ) {
+      setError(
+        "Enter a GitHub repository URL, such as https://github.com/acme/payment-service",
+      );
+      return;
+    }
+    if (enabled.length === 0) {
+      setError("Select at least one agent.");
+      return;
+    }
+    setError("");
+    onStart(
+      repo
+        .replace(/^https?:\/\/github\.com\//, "")
+        .replace(/\/$/, "")
+        .trim(),
+      enabled,
+      context,
+    );
+  }
+  return (
+    <div className="setup-page">
+      <span className="large-brand">
+        <ShieldCheck size={22} />
+      </span>
+      <h1>What are we securing today?</h1>
+      <p className="intro">
+        Give our AI agents a repository. Get a clear picture of its
+        vulnerabilities, with verified findings and
+        <br className="desktop-only" /> actionable fixes.
+      </p>
+      <div className="setup-form">
+        <div className="eyebrow">AI model configuration</div>
+        <p className="helper">
+          Choose the model for each agent independently. These selections apply
+          only to this analysis run.
+        </p>
+        <div className="agent-selectors">
+          {agents.map((a) => (
+            <button
+              className={`agent-select ${enabled.includes(a.id) ? "agent-selected" : "agent-disabled"}`}
+              key={a.id}
+              onClick={() => toggle(a.id)}
+            >
+              <span className="agent-mark">
+                {enabled.includes(a.id) ? (
+                  <ShieldCheck size={16} />
+                ) : (
+                  <CirclePlus size={16} />
+                )}
+              </span>
+              <span className="agent-main">
+                <strong>{a.name}</strong>
+                <span>{a.description}</span>
+                <small>Models: Gemini · Claude · GPT-4 · Llama</small>
+              </span>
+              <span className="agent-pill">
+                <span>{a.model}</span>
+                <span>{enabled.includes(a.id) ? "Selected" : "Off"}</span>
+                <ChevronDown size={13} />
+              </span>
+            </button>
+          ))}
+        </div>
+        <button
+          className="add-agent"
+          onClick={() => setOpen(!open)}
+          aria-label="Add agent"
+        >
+          <CirclePlus size={20} />
+        </button>
+        {open && (
+          <div className="extra-note">
+            <Sparkles size={14} />
+            All four agents are available in this demo. Click an agent to enable
+            or disable it.
+          </div>
+        )}
+        <div className="field-label">
+          <Github size={14} /> GitHub repository
+        </div>
+        <div className="repository-input">
+          <Github size={16} />
+          <input
+            aria-label="GitHub repository"
+            value={repo}
+            onChange={(e) => setRepo(e.target.value)}
+            placeholder="https://github.com/organization/repository"
+          />
+          <Link2 size={14} />
+        </div>
+        <div className="field-label">
+          Extra context <span className="muted">Optional</span>
+        </div>
+        <div className="textarea-wrap">
+          <textarea
+            value={context}
+            onChange={(e) => setContext(e.target.value.slice(0, 5000))}
+            placeholder="What should the agents know? Share areas to focus on, your tech stack, or any specific security concerns..."
+          />
+          <span>{context.length} / 5,000</span>
+        </div>
+        {error && (
+          <div role="alert" className="error-message">
+            {error}
+          </div>
+        )}
+        <div className="setup-actions">
+          <div className="tiny-policy">
+            <Sparkles size={13} />
+            Default branch · Full security review
+          </div>
+          <button className="primary-btn" onClick={submit}>
+            Start analysis <ArrowRight size={15} />
+          </button>
+        </div>
+      </div>
+      <div className="setup-footer">
+        ♧ Multi-agent code review &nbsp;&nbsp;&nbsp; ♧ Verified vulnerabilities
+        &nbsp;&nbsp;&nbsp; ♧ Actionable report
+      </div>
+      <div className="ai-disclaimer">
+        AI can make mistakes. Review findings before making changes.
+      </div>
+    </div>
+  );
+}
