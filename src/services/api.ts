@@ -2,15 +2,7 @@ import type { Report, ToolCheck, Finding, Severity } from "../types";
 import { saveReportToCookie } from "../utils/cookies";
 import sampleJson from "../data/sample.json";
 
-/**
- * Base URL for the security scanner backend API.
- * Defaults to environment variables or local fallback.
- */
-export const API_URL: string =
-  (import.meta.env.VITE_API_URL as string) ||
-  (import.meta.env.API_URL as string) ||
-  (typeof window !== "undefined" && (window as any).API_URL) ||
-  "/";
+export const API_URL = "/";
 
 /**
  * Creates a unique identifier.
@@ -229,4 +221,3 @@ export async function scanUrl(inputUrl: string): Promise<Report> {
 
   return report;
 }
-

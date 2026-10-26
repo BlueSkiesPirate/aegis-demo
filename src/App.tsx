@@ -11,6 +11,7 @@ import {
   setActiveReportCookie,
 } from "./utils/cookies";
 
+
 function getSaved(): Analysis[] {
   try {
     const raw = localStorage.getItem("aegis-analyses");
