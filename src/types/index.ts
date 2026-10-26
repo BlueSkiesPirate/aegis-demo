@@ -1,5 +1,5 @@
 export type Stage = "setup" | "processing" | "report";
-export type AgentId = "dependency" | "secrets" | "access" | "logic";
+export type AgentId = string;
 export interface Agent {
   id: AgentId;
   name: string;

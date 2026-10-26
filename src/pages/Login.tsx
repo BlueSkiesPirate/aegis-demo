@@ -1,10 +1,10 @@
 import { Github, ShieldCheck } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 export default function Login({ onLogin }: { onLogin: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  function submit(e: FormEvent) {
+  function submit(e: SubmitEvent) {
     e.preventDefault();
     if (!email.includes("@") || password.length < 1) {
       setError("Enter an email and password to continue.");
@@ -39,7 +39,7 @@ export default function Login({ onLogin }: { onLogin: () => void }) {
               placeholder="Password"
             />
           </label>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="error-message">{error}</p>}
           <button className="dark-btn" type="submit">
             Sign In
           </button>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import Processing from "./pages/Processing";
@@ -80,7 +79,6 @@ export default function App() {
         onLogout={logout}
       />
       <div className="main-column">
-        <Header onNew={() => setActiveId(null)} />
         <main className="main-area">
           {!active ? (
             <Setup onStart={start} />

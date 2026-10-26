@@ -1,28 +1,91 @@
 import {
   ArrowRight,
-  ChevronDown,
   CirclePlus,
   Github,
   Link2,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { useState } from "react";
-import { agents, allAgentIds } from "../data/mock";
+import Dropdown from "../components/Dropdown";
+import type { DropdownOption } from "../components/Dropdown";
+import { agents } from "../data/mock";
 import type { AgentId } from "../types";
+
+const availableModels = ["Claude", "Gemini", "GPT-4", "Llama"];
+
+interface ConfiguredAgent {
+  instanceId: string;
+  id: AgentId;
+  name: string;
+  description: string;
+  model: string;
+}
+
 interface Props {
   onStart: (repository: string, enabled: AgentId[], context: string) => void;
 }
+
+// ── Setup page ───────────────────────────────────────────────────────────────
+
 export default function Setup({ onStart }: Props) {
-  const [enabled, setEnabled] = useState<AgentId[]>(allAgentIds);
+  const [configuredAgents, setConfiguredAgents] = useState<ConfiguredAgent[]>([
+    {
+      instanceId: "agent-1",
+      id: agents[0].id,
+      name: agents[0].name,
+      description: agents[0].description,
+      model: agents[0].model,
+    },
+  ]);
   const [repo, setRepo] = useState("https://github.com/acme/payment-service");
   const [context, setContext] = useState("");
   const [error, setError] = useState("");
-  const [open, setOpen] = useState(false);
-  const toggle = (id: AgentId) =>
-    setEnabled((a) =>
-      a.includes(id) ? a.filter((x) => x !== id) : [...a, id],
+
+  const handleTypeChange = (instanceId: string, newId: string) => {
+    const agentDef = agents.find((a) => a.id === newId);
+    if (!agentDef) return;
+    setConfiguredAgents((prev) =>
+      prev.map((item) =>
+        item.instanceId === instanceId
+          ? { ...item, id: agentDef.id, name: agentDef.name, description: agentDef.description }
+          : item,
+      ),
     );
+  };
+
+  const handleModelChange = (instanceId: string, newModel: string) => {
+    setConfiguredAgents((prev) =>
+      prev.map((item) =>
+        item.instanceId === instanceId ? { ...item, model: newModel } : item,
+      ),
+    );
+  };
+
+  const handleRemoveAgent = (instanceId: string) => {
+    setConfiguredAgents((prev) =>
+      prev.filter((item) => item.instanceId !== instanceId),
+    );
+  };
+
+  const handleAddAgent = () => {
+    const nextFromPool =
+      agents.find((a) => !configuredAgents.some((ca) => ca.id === a.id)) ||
+      agents[configuredAgents.length % agents.length];
+
+    const newAgent: ConfiguredAgent = {
+      instanceId: `agent-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      id: nextFromPool.id,
+      name: nextFromPool.name,
+      description: nextFromPool.description,
+      model: nextFromPool.model,
+    };
+
+    setConfiguredAgents((prev) => [...prev, newAgent]);
+    setError("");
+  };
+
   function submit() {
     if (
       !repo.trim() ||
@@ -34,7 +97,7 @@ export default function Setup({ onStart }: Props) {
       );
       return;
     }
-    if (enabled.length === 0) {
+    if (configuredAgents.length === 0) {
       setError("Select at least one agent.");
       return;
     }
@@ -44,10 +107,22 @@ export default function Setup({ onStart }: Props) {
         .replace(/^https?:\/\/github\.com\//, "")
         .replace(/\/$/, "")
         .trim(),
-      enabled,
+      configuredAgents.map((a) => a.id),
       context,
     );
   }
+
+  const agentTypeOptions: DropdownOption[] = agents.map((a) => ({
+    value: a.id,
+    label: a.name,
+    sub: a.description,
+  }));
+
+  const modelOptions: DropdownOption[] = availableModels.map((m) => ({
+    value: m,
+    label: m,
+  }));
+
   return (
     <div className="setup-page">
       <span className="large-brand">
@@ -66,46 +141,52 @@ export default function Setup({ onStart }: Props) {
           only to this analysis run.
         </p>
         <div className="agent-selectors">
-          {agents.map((a) => (
-            <button
-              className={`agent-select ${enabled.includes(a.id) ? "agent-selected" : "agent-disabled"}`}
-              key={a.id}
-              onClick={() => toggle(a.id)}
-            >
-              <span className="agent-mark">
-                {enabled.includes(a.id) ? (
-                  <ShieldCheck size={16} />
-                ) : (
-                  <CirclePlus size={16} />
-                )}
-              </span>
+          {configuredAgents.map((agent) => (
+            <div className="agent-select" key={agent.instanceId}>
               <span className="agent-main">
-                <strong>{a.name}</strong>
-                <span>{a.description}</span>
+                <Dropdown
+                  value={agent.id}
+                  options={agentTypeOptions}
+                  onChange={(val) => handleTypeChange(agent.instanceId, val)}
+                  variant="type"
+                  aria-label="Select agent type"
+                />
+                <span>{agent.description}</span>
                 <small>Models: Gemini · Claude · GPT-4 · Llama</small>
               </span>
-              <span className="agent-pill">
-                <span>{a.model}</span>
-                <span>{enabled.includes(a.id) ? "Selected" : "Off"}</span>
-                <ChevronDown size={13} />
-              </span>
-            </button>
+              <Dropdown
+                value={agent.model}
+                options={modelOptions}
+                onChange={(val) => handleModelChange(agent.instanceId, val)}
+                variant="model"
+                aria-label={`Model for ${agent.name}`}
+              />
+              <button
+                type="button"
+                className="agent-remove-btn"
+                title="Remove agent"
+                aria-label={`Remove ${agent.name}`}
+                onClick={() => handleRemoveAgent(agent.instanceId)}
+              >
+                <X size={14} />
+              </button>
+            </div>
           ))}
+          {configuredAgents.length === 0 && (
+            <div className="agent-empty">
+              No agents configured. Click &quot;Add agent&quot; below to add one.
+            </div>
+          )}
         </div>
         <button
+          type="button"
           className="add-agent"
-          onClick={() => setOpen(!open)}
+          onClick={handleAddAgent}
           aria-label="Add agent"
         >
-          <CirclePlus size={20} />
+          <CirclePlus size={18} />
+          Add agent
         </button>
-        {open && (
-          <div className="extra-note">
-            <Sparkles size={14} />
-            All four agents are available in this demo. Click an agent to enable
-            or disable it.
-          </div>
-        )}
         <div className="field-label">
           <Github size={14} /> GitHub repository
         </div>

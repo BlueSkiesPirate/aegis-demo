@@ -20,8 +20,10 @@ export default function Processing({
         <div>
           <h1>Processing {repository}</h1>
           <p>
-            Four agents are reviewing your repository. Follow their progress
-            below.
+            {activeAgents.length === 1
+              ? "1 agent is"
+              : `${activeAgents.length} agents are`}{" "}
+            reviewing your repository. Follow their progress below.
           </p>
         </div>
         <span className="status-badge">
@@ -59,10 +61,16 @@ export default function Processing({
       </div>
       <div className="agent-grid">
         {activeAgents.map((a, i) => {
+          const offsets = [4, -12, 0, -20, 6, -8, 2, -15];
           const agentProgress = Math.min(
             100,
-            Math.max(8, progress + [4, -12, 0, -20][i]),
+            Math.max(8, progress + (offsets[i % offsets.length] ?? 0)),
           );
+          const detail = agentDetails[a.id] ?? {
+            finding: "Security checks and heuristics completed without anomalies.",
+            output: "Evaluating repository components and code flows.",
+            work: "Running security checks and policy validations.",
+          };
           return (
             <div className="progress-card" key={a.id}>
               <div className="progress-head">
@@ -77,13 +85,13 @@ export default function Processing({
               </div>
               <div className="agent-message">
                 <small>Agent update</small>
-                <p>{agentDetails[a.id].output}</p>
+                <p>{detail.output}</p>
               </div>
               <div className="agent-message">
                 <small>Preliminary finding</small>
                 <p>
                   <span className="green-dot inline-block mr-1" />
-                  {agentDetails[a.id].finding}
+                  {detail.finding}
                 </p>
               </div>
               <div className="agent-message">
@@ -95,7 +103,7 @@ export default function Processing({
                       Review finished.
                     </>
                   ) : (
-                    agentDetails[a.id].work
+                    detail.work
                   )}
                 </p>
               </div>

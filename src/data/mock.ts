@@ -24,6 +24,30 @@ export const agents: Agent[] = [
     description: "Inspects code flows, input handling, and logic weaknesses",
     model: "GPT-4",
   },
+  {
+    id: "compliance",
+    name: "Compliance agent",
+    description: "Evaluates SOC2, HIPAA, and GDPR regulatory safeguards",
+    model: "Gemini",
+  },
+  {
+    id: "infrastructure",
+    name: "Infrastructure agent",
+    description: "Scans Terraform, Dockerfiles, and cloud configuration",
+    model: "GPT-4",
+  },
+  {
+    id: "crypto",
+    name: "Cryptography agent",
+    description: "Validates cipher suites, key generation, and hash strengths",
+    model: "Claude",
+  },
+  {
+    id: "performance",
+    name: "Performance agent",
+    description: "Finds N+1 queries, memory leaks, and blocking code flows",
+    model: "GPT-4",
+  },
 ];
 export const allAgentIds: AgentId[] = [
   "dependency",
@@ -134,5 +158,25 @@ export const agentDetails: Record<
     output:
       "Analyzing authentication handlers, SQL queries, and error handling paths.",
     work: "Running semantic code search, taint tracking, and logic-flow checks.",
+  },
+  compliance: {
+    finding: "Data retention policies for customer PII require audit logging.",
+    output: "Verifying regulatory adherence and data handling standards.",
+    work: "Reviewing encryption at rest, access logs, and data retention rules.",
+  },
+  infrastructure: {
+    finding: "Container base image running as root user with write privileges.",
+    output: "Scanning Docker configuration and cloud deployment manifests.",
+    work: "Auditing security context, capabilities, and resource limits.",
+  },
+  crypto: {
+    finding: "Legacy MD5 hash used in non-security identifier token generation.",
+    output: "Inspecting cipher algorithms, token generation, and entropy.",
+    work: "Verifying cryptographic primitives and random number generators.",
+  },
+  performance: {
+    finding: "Potential connection pool exhaustion under high concurrent load.",
+    output: "Profiling resource usage and connection lifecycle handling.",
+    work: "Analyzing asynchronous bottlenecks and query execution pipelines.",
   },
 };

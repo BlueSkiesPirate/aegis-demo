@@ -34,14 +34,16 @@ export default function Sidebar({
   return (
     <aside className={`sidebar ${collapsed ? "sidebar-collapsed" : ""}`}>
       <div className="brand">
-        <ShieldCheck size={19} strokeWidth={1.8} className="text-emerald-700" />
-        {!collapsed && <b>aegis</b>}
+        {!collapsed && <div className="flex flex-row gap-2 justify-center items-baseline">
+          <ShieldCheck size={19} strokeWidth={1.8} className="text-emerald-700"/> <b> aegis</b>
+        </div>
+        }
         <button
-          className="icon-button ml-auto"
+          className="icon-button ml-auto flex justify-center items-center p-0 gap-0"
           aria-label="Toggle sidebar"
           onClick={() => setCollapsed(!collapsed)}
         >
-          <Menu size={15} />
+          <Menu size={12} />
         </button>
       </div>
       {!collapsed && (
@@ -107,7 +109,7 @@ export default function Sidebar({
               ),
             )}
             {filtered.length === 0 && (
-              <p className="p-3 muted text-xs">No matching analyses.</p>
+              <p className="p-3 muted text-[12.5px]">No matching analyses.</p>
             )}
           </div>
           <div className="sidebar-bottom">
