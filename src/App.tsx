@@ -4,7 +4,6 @@ import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import Processing from "./pages/Processing";
 import ReportView from "./pages/Report";
-import { initialAnalyses } from "./data/mock";
 import type { Analysis, Report } from "./types";
 import { scanUrl } from "./services/api";
 import {
@@ -15,9 +14,9 @@ import {
 function getSaved(): Analysis[] {
   try {
     const raw = localStorage.getItem("aegis-analyses");
-    return raw ? (JSON.parse(raw) as Analysis[]) : initialAnalyses;
+    return raw ? (JSON.parse(raw) as Analysis[]) : [];
   } catch {
-    return initialAnalyses;
+    return [];
   }
 }
 

@@ -38,18 +38,18 @@ export default function Sidebar({
 }: Props) {
   const [search, setSearch] = useState("");
   const [collapsed, setCollapsed] = useState(false);
-  const items: SidebarItem[] = analyses.map((a) => ({
-    id: a.id,
-    repository: a.repository,
-    status: a.status,
-    created: (a.created as any) || "Today",
-    subtitle:
-      a.status === "running"
-        ? "Analyzing · Agents working"
-        : a.status === "warning"
+  const items: SidebarItem[] = analyses
+    .filter((analysis) => analysis.stage === "report" && analysis.reportId)
+    .map((analysis) => ({
+      id: analysis.id,
+      repository: analysis.repository,
+      status: analysis.status,
+      created: (analysis.created as any) || "Today",
+      subtitle:
+        analysis.status === "warning"
           ? "4 critical, 10 warnings · Issues"
           : "No findings · main",
-  }));
+    }));
 
   const filtered = items.filter((item) =>
     item.repository.toLowerCase().includes(search.toLowerCase()),
