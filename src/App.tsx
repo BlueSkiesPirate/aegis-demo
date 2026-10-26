@@ -1,16 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "./components/Sidebar";
 import Login from "./pages/Login";
 import Setup from "./pages/Setup";
 import Processing from "./pages/Processing";
-import Report from "./pages/Report";
+import ReportView from "./pages/Report";
 import { initialAnalyses } from "./data/mock";
-import type { AgentId, Analysis } from "./types";
-import { scanUrl, getFallbackReport } from "./services/api";
+import type { Analysis, Report } from "./types";
+import { scanUrl } from "./services/api";
 import {
   getReportFromCookie,
-  getReportsFromCookies,
-  saveReportToCookie,
   setActiveReportCookie,
 } from "./utils/cookies";
 
@@ -29,33 +27,16 @@ export default function App() {
   );
   const [analyses, setAnalyses] = useState<Analysis[]>(getSaved);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [progress, setProgress] = useState(4);
-
-  // Initialize cookies with sample.json if cookies are completely empty
-  useEffect(() => {
-    const cookieReports = getReportsFromCookies();
-    if (cookieReports.length === 0) {
-      const initialReport = getFallbackReport("https://www.tonycui.online/");
-      saveReportToCookie(initialReport);
-    }
-  }, []);
+  const activeIdRef = useRef(activeId);
+  activeIdRef.current = activeId;
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [report, setReport] = useState<Report | null>(null);
+  const [scanError, setScanError] = useState("");
 
   useEffect(
     () => localStorage.setItem("aegis-analyses", JSON.stringify(analyses)),
     [analyses],
   );
-
-  const active = analyses.find((a) => a.id === activeId);
-  const activeReport = activeId ? getReportFromCookie(activeId) : null;
-
-  useEffect(() => {
-    if (active?.stage !== "processing") return;
-    const timer = window.setInterval(
-      () => setProgress((p) => Math.min(100, p + 2)),
-      500,
-    );
-    return () => clearInterval(timer);
-  }, [active?.stage, activeId]);
 
   function login() {
     localStorage.setItem("aegis-login", "yes");
@@ -67,7 +48,7 @@ export default function App() {
     setLoggedIn(false);
   }
 
-  async function start(repository: string, enabled: AgentId[], context: string) {
+  async function start(repository: string) {
     const nextId = crypto.randomUUID();
     const next: Analysis = {
       id: nextId,
@@ -75,95 +56,60 @@ export default function App() {
       status: "running",
       created: "Today",
       stage: "processing",
-      enabled,
-      context,
+      enabled: [],
+      context: "",
     };
 
+    setScanError("");
+    setReport(null);
     setAnalyses((prev) => [next, ...prev]);
-    setActiveId(next.id);
-    setProgress(4);
+    activeIdRef.current = nextId;
+    setActiveId(nextId);
+    setProcessingId(nextId);
 
-    // Call the API on route /scan/url with a 10s timeout (falls back to sample.json)
     try {
-      const report = await scanUrl(repository);
-      setActiveReportCookie(report.id);
+      const result = await scanUrl(repository);
+      setActiveReportCookie(result.id);
       setAnalyses((prev) =>
         prev.map((a) =>
           a.id === nextId
             ? {
                 ...a,
-                id: report.id, // align analysis ID with report ID
-                reportId: report.id,
-                status:
-                  report.summary.nist_score >= 5 ? "warning" : "complete",
+                stage: "report",
+                reportId: result.id,
+                status: result.summary.nist_score >= 5 ? "warning" : "complete",
               }
             : a,
         ),
       );
-      setActiveId(report.id);
-    } catch (err) {
-      console.warn("Scan failed, fallback handled in api service:", err);
+      if (activeIdRef.current === nextId) setReport(result);
+    } catch (error) {
+      setAnalyses((prev) => prev.filter((analysis) => analysis.id !== nextId));
+      if (activeIdRef.current === nextId) {
+        activeIdRef.current = null;
+        setActiveId(null);
+        setScanError(
+            error instanceof Error
+              ? error.message
+              : "The scan could not be completed.",
+        );
+      }
+    } finally {
+      setProcessingId((current) => (current === nextId ? null : current));
     }
   }
 
-  function finish() {
-    if (!activeId) return;
-    setAnalyses((prev) =>
-      prev.map((a) =>
-        a.id === activeId
-          ? {
-              ...a,
-              stage: "report",
-              status: a.status === "running" ? "warning" : a.status,
-            }
-          : a,
-      ),
-    );
-  }
-
   function select(id: string) {
+    const selected = analyses.find((analysis) => analysis.id === id);
+    const selectedReport = getReportFromCookie(selected?.reportId ?? id);
+    activeIdRef.current = id;
     setActiveId(id);
-    setActiveReportCookie(id);
-    setProgress(100);
-
-    setAnalyses((prev) => {
-      const found = prev.find((a) => a.id === id);
-      if (found) {
-        return prev.map((a) =>
-          a.id === id
-            ? {
-                ...a,
-                stage: a.stage === "processing" ? "processing" : "report",
-              }
-            : a,
-        );
-      }
-
-      // If selected from cookies but not yet in memory list, add it
-      const cookieRep = getReportFromCookie(id);
-      if (cookieRep) {
-        const item: Analysis = {
-          id: cookieRep.id,
-          repository: cookieRep.target.url,
-          status:
-            cookieRep.summary.nist_score >= 5 ? "warning" : "complete",
-          created: cookieRep.createdGroup || "Today",
-          stage: "report",
-          enabled: ["dependency", "secrets", "access", "logic"],
-          context: "",
-          reportId: cookieRep.id,
-        };
-        return [item, ...prev];
-      }
-
-      return prev;
-    });
+    setReport(selectedReport);
+    setScanError("");
+    if (selectedReport) setActiveReportCookie(selectedReport.id);
   }
 
   if (!loggedIn) return <Login onLogin={login} />;
-
-  const isShowingReport =
-    active?.stage === "report" || (!active && activeReport !== null);
 
   return (
     <div className="app-shell">
@@ -171,30 +117,22 @@ export default function App() {
         analyses={analyses}
         activeId={activeId}
         onSelect={select}
-        onNew={() => setActiveId(null)}
+        onNew={() => {
+          activeIdRef.current = null;
+          setActiveId(null);
+          setReport(null);
+          setScanError("");
+        }}
         onLogout={logout}
       />
       <div className="main-column">
         <main className="main-area">
-          {!active && !activeReport ? (
-            <Setup onStart={start} />
-          ) : active?.stage === "processing" ? (
-            <Processing
-              repository={active.repository}
-              enabled={active.enabled}
-              progress={progress}
-              onFinish={finish}
-            />
-          ) : isShowingReport ? (
-            <Report
-              repository={active?.repository || activeReport?.target.url || "Target URL"}
-              enabled={active?.enabled || []}
-              reportId={activeId || undefined}
-              report={activeReport}
-              onNew={() => setActiveId(null)}
-            />
+          {processingId !== null && processingId === activeId ? (
+            <Processing />
+          ) : report ? (
+            <ReportView report={report} />
           ) : (
-            <Setup onStart={start} />
+            <Setup onStart={start} error={scanError} />
           )}
         </main>
       </div>

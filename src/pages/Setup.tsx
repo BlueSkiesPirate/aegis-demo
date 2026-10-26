@@ -1,25 +1,38 @@
-import { ArrowRight, Github, Link2, ShieldCheck, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Link2, ShieldCheck } from "lucide-react";
+import { useState, type FormEvent } from "react";
 
 // ── Setup page ───────────────────────────────────────────────────────────────
 
-export default function Setup() {
+interface Props {
+  onStart: (url: string) => Promise<void>;
+  error?: string;
+}
+
+export default function Setup({ onStart, error: scanError }: Props) {
   const [url, setURL] = useState("");
   const [error, setError] = useState("");
-  const [context, setContext] = useState("");
-  function submit() {
-    //TODO: this should accept more than just Github URLs, this can accept normal urls as well
-    if (
-      !url.trim() ||
-      !url.includes("github.com/") ||
-      !url.split("github.com/")[1]?.includes("/")
-    ) {
-      setError(
-        "Enter a GitHub repository URL, such as https://github.com/acme/payment-service",
-      );
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const input = url.trim();
+    if (!input) {
+      setError("Enter a website or GitHub repository URL.");
       return;
     }
+
+    try {
+      const parsed = new URL(
+        /^https?:\/\//i.test(input) ? input : `https://${input}`,
+      );
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        throw new Error("Unsupported protocol");
+      }
+    } catch {
+      setError("Enter a valid website or GitHub repository URL.");
+      return;
+    }
+
     setError("");
+    await onStart(input);
   }
   return (
     <div className="setup-page">
@@ -32,7 +45,7 @@ export default function Setup() {
         vulnerabilities, with verified findings and
         <br className="desktop-only" /> actionable fixes.
       </p>
-      <div className="setup-form">
+      <form className="setup-form" onSubmit={submit}>
         <div className="field-label">
           <Link2 size={14} /> GitHub repository or URL
         </div>
@@ -46,17 +59,17 @@ export default function Setup() {
           />
           <Link2 size={14} />
         </div>
-        {error && (
+        {(error || scanError) && (
           <div role="alert" className="error-message">
-            {error}
+            {error || scanError}
           </div>
         )}
         <div className="flex flex-row items-center justify-center">
-          <button className="primary-btn" onClick={submit}>
+          <button className="primary-btn" type="submit">
             Start analysis <ArrowRight size={15} />
           </button>
         </div>
-      </div>
+      </form>
       <div className="ai-disclaimer">
         AI can make mistakes. Review findings before making changes.
       </div>
