@@ -1,3 +1,7 @@
+# TODO:
+- Real logins don't work properly
+- All analysis are stored in cookies, this is temporary behavior and should IDEALLY be stored in a server side db
+
 # Aegis Security Dashboard — Interactive Demo
 
 A complete **React + TypeScript + Tailwind CSS v4 + Vite** frontend demo inspired by the four provided screen references. No backend, GitHub authentication, or real security scanning is involved.
@@ -17,8 +21,6 @@ Visit the URL displayed by Vite (usually `http://localhost:5173`). To test a pro
 npm run build
 npm run preview
 ```
-
-## Demo journey
 
 1. Login screen: enter any email and nonempty password, or click **Sign In With GitHub** (mock login only).
 2. Setup screen: toggle security agents, edit the repository URL and optional context, and click **Start analysis**.
@@ -48,7 +50,3 @@ src/
 ├── main.tsx              # React mount point
 └── index.css             # Tailwind import and visual styles
 ```
-
-## Expanding into a real product
-
-Add a backend for authentication, repository authorization, job orchestration, and verified scanner findings. Do not use the example vulnerabilities as if they came from a real analysis. Integrate GitHub OAuth only with a secure server-side token flow, and treat any repository code as untrusted input.

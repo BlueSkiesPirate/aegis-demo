@@ -14,4 +14,6 @@ export interface Analysis {
   stage: Stage;
   enabled: AgentId[];
   context: string;
+  reportId?: string;
 }
+export * from "./report";
