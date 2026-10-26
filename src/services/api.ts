@@ -10,7 +10,7 @@ export const API_URL: string =
   (import.meta.env.VITE_API_URL as string) ||
   (import.meta.env.API_URL as string) ||
   (typeof window !== "undefined" && (window as any).API_URL) ||
-  "http://localhost:8000";
+  "/";
 
 /**
  * Creates a unique identifier.

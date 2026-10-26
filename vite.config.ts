@@ -7,8 +7,8 @@ export default defineConfig({
   envPrefix: ["VITE_", "API_"],
   server: {
     proxy: {
-      // Intercepts any frontend fetch starting with '/api'
-      "/api": {
+      // Intercepts any frontend fetch starting with '/scan'
+      "/scan": {
         target: "http://localhost:8000", // Path to your backend server
         changeOrigin: true,
         secure: false,
