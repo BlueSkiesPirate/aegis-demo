@@ -1,6 +1,5 @@
 # TODO:
-- Real logins don't work properly
-- All analysis are stored in cookies, this is temporary behavior and should IDEALLY be stored in a server side db
+- API needs to be hosted in order to work, CORS blocks requests between client and API
 
 # Aegis Security Dashboard — Interactive Demo
 
